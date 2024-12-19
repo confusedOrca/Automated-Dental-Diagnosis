@@ -30,3 +30,6 @@ coverage/
 .eslintcache
 
 env/
+
+__pycache__/
+media/

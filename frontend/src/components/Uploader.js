@@ -1,15 +1,16 @@
 import React, { useState, useRef } from "react";
 import ImageDisplay from "./ImageDisplay";
-import axios from "axios";
 import FormButton from "./FormButton";
 import Spinner from "./Spinner";
+import axios from "axios";
+import { getCookieValue } from "./../utils/cookie_decoder";
 
-export default function Uploader({ setReport, setId }) {
-  const [imageUrl, setImageUrl] = useState("generic.png");
-  const [maskUrl, setMaskUrl] = useState("na.png");
+export default function Uploader({ setReport }) {
+  const [imageUrl, setImageUrl] = useState(() => getCookieValue("imageUrl") || "generic.png");
+  const [maskUrl, setMaskUrl] = useState(() => getCookieValue("maskUrl") || "na.png");
   const [isUploaded, setIsUploaded] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [processing, setIsProcessing] = useState(false);
+  const [processing, setProcessing] = useState("IDLE");
   const fileInputRef = useRef(null);
 
   const handleFileSelect = (e) => {
@@ -25,50 +26,58 @@ export default function Uploader({ setReport, setId }) {
   };
 
   const handleUpload = () => {
-    setIsUploaded(true);
-    setIsProcessing(true);
-    setTimeout(() => {
-      fetch("/dummy.json")
-        .then((response) => response.json())
-        .then((data) => {
-          setId(data.id);
-          setImageUrl(data.imageUrl);
-          setMaskUrl(data.maskUrl);
-          setReport(data.report);
-          setIsProcessing(false);
-        })
-        .catch((error) => {
-          console.error("Error reading the dummy JSON file:", error);
-        });
-    }, 10000);
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    setProcessing("DIAGNOSE");
 
-    /*
-  const formData = new FormData();
-  formData.append("file", selectedFile);
     axios
-      .post("http://localhost:8000/upload", formData)
+      .post("http://localhost:8000/upload/", formData)
       .then((response) => {
-        setId(response.data.id);
-        setImageUrl(response.data.imageUrl);
-        setMaskUrl(response.data.maskUrl);
-        setReport(response.data.report);
+        const { imageUrl, maskUrl, report } = response.data;
+
+        document.cookie = `imageUrl=${encodeURIComponent(imageUrl)}; path=/;`;
+        document.cookie = `maskUrl=${encodeURIComponent(maskUrl)}; path=/;`;
+        document.cookie = `report=${encodeURIComponent(report)}; path=/;`;
+
+        setImageUrl(imageUrl);
+        setMaskUrl(maskUrl);
+        setReport(report);
+        setProcessing("IDLE");
+        setSelectedFile(null);
+
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        setIsUploaded(true);
       })
       .catch((error) => {
         console.error("Error uploading file:", error);
+        setProcessing("IDLE");
       });
-  */
   };
 
-  const handleReset = () => {
-    setImageUrl("generic.png");
-    setMaskUrl("na.png");
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+  const handleReset = async () => {
+    try {
+      setProcessing("RESET");
+      const uuid = imageUrl.split("/").pop().split(".")[0];
+      await axios.post(`http://localhost:8000/reset/${uuid}/`);
+    } catch (error) {
+      console.error("Error resetting files:", error);
+    } finally {
+      document.cookie = "imageUrl=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+      document.cookie = "maskUrl=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+      document.cookie = "report=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+
+      setImageUrl("generic.png");
+      setMaskUrl("na.png");
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      setIsUploaded(false);
+      setReport("");
+      setProcessing("IDLE");
     }
-    setIsUploaded(false);
-    setReport("");
-    setId("");
   };
 
   return (
@@ -99,7 +108,7 @@ export default function Uploader({ setReport, setId }) {
             ref={fileInputRef}
             className="hidden"
           />
-          {!selectedFile && (
+          {maskUrl === "na.png" && (
             <FormButton
               onClick={() => fileInputRef.current.click()}
               label="Choose an Image"
@@ -110,24 +119,19 @@ export default function Uploader({ setReport, setId }) {
           {selectedFile && (
             <FormButton
               onClick={handleUpload}
-              disabled={isUploaded}
+              disabled={!selectedFile}
               label="Upload"
               bgColor="bg-green-500"
             />
           )}
 
-          <FormButton
-            onClick={handleReset}
-            disabled={!selectedFile | processing}
-            label="Reset"
-            bgColor="bg-red-500"
-          />
+          <FormButton onClick={handleReset} disabled={false} label="Reset" bgColor="bg-red-500" />
         </div>
       </form>
 
-      {processing && (
+      {processing !== "IDLE" && (
         <div className="fixed">
-          <Spinner />
+          <Spinner mode={processing} />
         </div>
       )}
     </>
