@@ -2,12 +2,23 @@ import os
 import requests
 from django.conf import settings
 from .report_generation import generate_report
+from django.apps import apps
+from urllib.parse import urlparse
+from .labeler import label
 
 def dummy_processing(image_path):
     print(f"Processing image at {image_path}")
     
+    api_config = apps.get_app_config('api')
+    yolo_model = api_config.yolo_model
+    
+    inf_path = os.path.join(os.getcwd(), urlparse(image_path).path.lstrip('/'))
+    
+    bboxes = yolo_model.predict(inf_path)
+    label(image_path=inf_path, bboxes=bboxes)
+    
     mask_url = "https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg"
-    question = "Siamese cat under 200 words."
+    question = "Siamese cat under 100 words."
 
     masks_folder = os.path.join(settings.MEDIA_ROOT, 'masks')
     reports_folder = os.path.join(settings.MEDIA_ROOT, 'reports')

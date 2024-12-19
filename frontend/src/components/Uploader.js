@@ -85,7 +85,7 @@ export default function Uploader({ setReport }) {
     <>
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="flex flex-col items-center w-11/12 h-[32rem] py-16 bg-gray-100"
+        className="flex flex-col items-center w-11/12 pt-8 pb-16 bg-gray-100"
       >
         <div className="flex space-x-16">
           <ImageDisplay

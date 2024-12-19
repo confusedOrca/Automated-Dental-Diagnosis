@@ -34,7 +34,7 @@ const Spinner = ({ mode = "DIAGNOSE" }) => {
     const intervalId = setInterval(() => {
       const nextMessage = messages[Math.floor(Math.random() * messages.length)];
       setCurrentMessage(nextMessage);
-    }, 5000);
+    }, 15000);
 
     return () => clearInterval(intervalId);
   }, [messages]);
