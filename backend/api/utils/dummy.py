@@ -1,20 +1,7 @@
 import os
 import requests
 from django.conf import settings
-from api.apps import ApiConfig
-from ollama import chat
-
-def serve_llm(request):
-    response = chat(
-        model="report_generator",
-        messages=[{'role': 'user', 'content': request}]
-    )
-    
-    response2 = chat(
-        model="html_generator",
-        messages=[{'role': 'user', 'content': response['message']['content']}]
-    )
-    return response2['message']['content']
+from .report_generation import generate_report
 
 def dummy_processing(image_path):
     print(f"Processing image at {image_path}")
@@ -35,7 +22,7 @@ def dummy_processing(image_path):
         f.write(mask_image.content)
 
     try:
-        report = serve_llm(question)
+        report = generate_report(question)
     except Exception as e:
         report = f"Error generating report: {e}"
 

@@ -1,8 +1,22 @@
 /** @type {import('tailwindcss').Config} */
+
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  content: ["./src/**/*.{html,js}"],
   theme: {
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    function ({ addBase }) {
+      addBase({
+        ul: {
+          listStyle: "initial",
+          paddingLeft: "2rem",
+        },
+        ol: {
+          listStyle: "initial",
+          paddingLeft: "2rem",
+        },
+      });
+    },
+  ],
 };
