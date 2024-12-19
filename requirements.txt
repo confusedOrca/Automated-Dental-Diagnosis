@@ -1,3 +1,7 @@
-django
+Django
 djangorestframework
 environs
+torch
+torchvision
+django-cors-headers
+ultralytics
