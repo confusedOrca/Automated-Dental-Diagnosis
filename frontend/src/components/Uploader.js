@@ -61,22 +61,23 @@ export default function Uploader({ setReport }) {
       setProcessing("RESET");
       const uuid = imageUrl.split("/").pop().split(".")[0];
       await axios.post(`http://localhost:8000/reset/${uuid}/`);
-    } catch (error) {
-      console.error("Error resetting files:", error);
-    } finally {
       document.cookie = "imageUrl=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
       document.cookie = "maskUrl=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
       document.cookie = "report=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
-
-      setImageUrl("generic.png");
-      setMaskUrl("na.png");
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      setIsUploaded(false);
-      setReport("");
-      setProcessing("IDLE");
+    } catch (error) {
+      console.error("Error resetting files:", error);
+    } finally {
+      setTimeout(() => {
+        setImageUrl("generic.png");
+        setMaskUrl("na.png");
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        setIsUploaded(false);
+        setReport("");
+        setProcessing("IDLE");
+      }, 1000);
     }
   };
 
@@ -101,6 +102,15 @@ export default function Uploader({ setReport }) {
         </div>
 
         <div className="flex space-x-4 items-center">
+          {selectedFile && (
+            <FormButton
+              onClick={handleUpload}
+              disabled={!selectedFile}
+              label="Upload"
+              bgColor="bg-green-500"
+            />
+          )}
+
           <input
             type="file"
             accept="image/jpeg, image/png"
@@ -113,15 +123,6 @@ export default function Uploader({ setReport }) {
               onClick={() => fileInputRef.current.click()}
               label="Choose an Image"
               bgColor="bg-blue-500"
-            />
-          )}
-
-          {selectedFile && (
-            <FormButton
-              onClick={handleUpload}
-              disabled={!selectedFile}
-              label="Upload"
-              bgColor="bg-green-500"
             />
           )}
 
