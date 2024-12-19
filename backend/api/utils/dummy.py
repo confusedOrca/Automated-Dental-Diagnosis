@@ -1,16 +1,26 @@
 import os
-import time
 import requests
-from urllib.parse import urlparse
 from django.conf import settings
+from api.apps import ApiConfig
+from ollama import chat
+
+def serve_llm(request):
+    response = chat(
+        model="report_generator",
+        messages=[{'role': 'user', 'content': request}]
+    )
+    
+    response2 = chat(
+        model="html_generator",
+        messages=[{'role': 'user', 'content': response['message']['content']}]
+    )
+    return response2['message']['content']
 
 def dummy_processing(image_path):
     print(f"Processing image at {image_path}")
-    time.sleep(5)
     
     mask_url = "https://t4.ftcdn.net/jpg/02/66/72/41/360_F_266724172_Iy8gdKgMa7XmrhYYxLCxyhx6J7070Pr8.jpg"
-    
-    report = """<h1>The Fascinating World of Siamese Cats</h1><br><p>Cats, one of the most beloved pets in the world, have been companions to humans for thousands of years. They are known for their independent nature, yet many cats enjoy the company of their human owners, forming strong bonds of affection. Domestic cats belong to the species <em>Felis catus</em>, and while they come in a variety of shapes, sizes, and colors, each cat exhibits unique behaviors that make them stand out. In fact, the domestic cat has been a subject of fascination for centuries, with people often admiring their graceful movements, playful antics, and mysterious ways.</p><br><p>One of the most popular cat breeds is the Siamese cat, a breed known for its striking appearance and vocal personality. Siamese cats are typically recognized for their slender bodies, large ears, and almond-shaped blue eyes. Their coat is short and sleek, often in a light cream or fawn color with darker points on the ears, face, paws, and tail. Their personalities are as striking as their appearance - Siamese cats are often described as talkative and highly social, seeking interaction with their human families.</p>"""
+    question = "Siamese cat under 200 words."
 
     masks_folder = os.path.join(settings.MEDIA_ROOT, 'masks')
     reports_folder = os.path.join(settings.MEDIA_ROOT, 'reports')
@@ -23,6 +33,11 @@ def dummy_processing(image_path):
     
     with open(mask_image_path, 'wb') as f:
         f.write(mask_image.content)
+
+    try:
+        report = serve_llm(question)
+    except Exception as e:
+        report = f"Error generating report: {e}"
 
     report_filename = os.path.basename(image_path).replace('.jpg', '.txt')
     report_path = os.path.join(reports_folder, report_filename)

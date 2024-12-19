@@ -5,3 +5,4 @@ torch
 torchvision
 django-cors-headers
 ultralytics
+ollama

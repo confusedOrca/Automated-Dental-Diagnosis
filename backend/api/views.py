@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 import os
-import time
 
 from .utils.save_upload import save_uploaded_image
 from .utils.dummy import dummy_processing
@@ -26,7 +25,6 @@ class UploadView(APIView):
 
 class ResetView(APIView):
     def post(self, request, uuid, *args, **kwargs):
-        time.sleep(5)
         base_image_path = os.path.join(settings.MEDIA_ROOT, "images", f"{uuid}.jpg")
         base_mask_path = os.path.join(settings.MEDIA_ROOT, "masks", f"{uuid}.png")
         base_report_path = os.path.join(settings.MEDIA_ROOT, "reports", f"{uuid}.txt")
