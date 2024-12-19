@@ -77,7 +77,7 @@ export default function Uploader({ setReport }) {
         setIsUploaded(false);
         setReport("");
         setProcessing("IDLE");
-      }, 1000);
+      }, 400);
     }
   };
 
@@ -90,13 +90,7 @@ export default function Uploader({ setReport }) {
         <div className="flex space-x-16">
           <ImageDisplay
             imageUrl={imageUrl}
-            title={
-              selectedFile == null
-                ? "Select An Image"
-                : !isUploaded
-                ? "Selected Image"
-                : "Uploaded Image"
-            }
+            title={!isUploaded ? "Upload An Image" : "Uploaded Image"}
           />
           <ImageDisplay imageUrl={maskUrl} title="Segmentation Mask" />
         </div>
