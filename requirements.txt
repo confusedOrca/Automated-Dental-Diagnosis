@@ -6,3 +6,4 @@ torchvision
 django-cors-headers
 ultralytics
 ollama
+transformers

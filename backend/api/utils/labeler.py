@@ -4,7 +4,7 @@ def label(image_path, bboxes):
     image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
     width, height = image.size
-    font = ImageFont.truetype("arial.ttf", 16)
+    font = ImageFont.truetype("arial.ttf", 24)
 
     for bbox in bboxes:
         bbox_id = bbox["id"]

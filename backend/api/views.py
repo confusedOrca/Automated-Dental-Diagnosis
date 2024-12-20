@@ -5,15 +5,16 @@ from django.conf import settings
 import os
 
 from .utils.save_upload import save_uploaded_image
-from .utils.dummy import dummy_processing
+from .utils.processor import process
 
 
 class UploadView(APIView):
     def post(self, request, *args, **kwargs):
         file_path = save_uploaded_image(request.FILES['file'])
         image_url = request.build_absolute_uri(f"/media/images/{os.path.basename(file_path)}")
-        mask_url, report_url = dummy_processing(image_url)
-        mask_url = request.build_absolute_uri(f"/media/masks/{os.path.basename(mask_url)}")
+        mask_url, report_url = process(image_url)
+        if mask_url != "na.png":
+            mask_url = request.build_absolute_uri(f"/media/masks/{os.path.basename(mask_url)}")
         report_url = request.build_absolute_uri(f"/media/reports/{os.path.basename(report_url)}")
         
         return Response({
