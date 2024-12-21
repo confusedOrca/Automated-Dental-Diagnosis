@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 
-const Spinner = ({ mode = "DIAGNOSE" }) => {
+const Spinner = ({ mode = "IDLE" }) => {
   const diagnoseMessages = useMemo(
     () => [
       "Just flossing through the data. Hang tight, your smile’s almost ready!",
@@ -39,8 +39,10 @@ const Spinner = ({ mode = "DIAGNOSE" }) => {
     return () => clearInterval(intervalId);
   }, [messages]);
 
-  return (
-    <div className="flex flex-col justify-center items-center h-screen w-screen bg-black bg-opacity-80">
+  return mode === "IDLE" ? (
+    <></>
+  ) : (
+    <div className="flex flex-col justify-center items-center h-screen w-screen bg-black bg-opacity-80 z-20">
       <div className="border-8 border-t-8 border-gray-300 border-t-blue-500 rounded-full w-16 h-16 animate-spin"></div>
       <h3 className="text-lg mt-8 text-white">{currentMessage}</h3>
     </div>

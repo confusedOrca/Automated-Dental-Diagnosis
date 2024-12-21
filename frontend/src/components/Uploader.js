@@ -1,26 +1,20 @@
 import React, { useState, useRef } from "react";
-import ImageDisplay from "./ImageDisplay";
-import FormButton from "./FormButton";
-import Spinner from "./Spinner";
+import ImageDisplay from "./reusable components/ImageDisplay";
+import FormButton from "./reusable components/FormButton";
+import Spinner from "./reusable components/Spinner";
 import axios from "axios";
-import { getCookieValue } from "./../utils/cookie_decoder";
 
-export default function Uploader({ setReport }) {
-  const [imageUrl, setImageUrl] = useState(() => getCookieValue("imageUrl") || "generic.png");
-  const [maskUrl, setMaskUrl] = useState(() => getCookieValue("maskUrl") || "na.png");
-  const [isUploaded, setIsUploaded] = useState(false);
+export default function Uploader({ data, updateData }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [processing, setProcessing] = useState("IDLE");
-  const fileInputRef = useRef(null);
+  const fileRef = useRef(null);
 
-  const handleFileSelect = (e) => {
+  const handleFile = (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    setSelectedFile(file);
-
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImageUrl(reader.result);
+      updateData({ imageUrl: reader.result });
+      setSelectedFile(file);
     };
     reader.readAsDataURL(file);
   };
@@ -29,53 +23,30 @@ export default function Uploader({ setReport }) {
     const formData = new FormData();
     formData.append("file", selectedFile);
     setProcessing("DIAGNOSE");
-
     axios
       .post("http://localhost:8000/upload/", formData)
-      .then((response) => {
-        const { imageUrl, maskUrl, report } = response.data;
-
-        document.cookie = `imageUrl=${encodeURIComponent(imageUrl)}; path=/;`;
-        document.cookie = `maskUrl=${encodeURIComponent(maskUrl)}; path=/;`;
-        document.cookie = `report=${encodeURIComponent(report)}; path=/;`;
-
-        setImageUrl(imageUrl);
-        setMaskUrl(maskUrl);
-        setReport(report);
+      .then(({ data }) => {
+        fileRef.current.value = "";
+        updateData({ imageUrl: data.imageUrl, maskUrl: data.maskUrl, report: data.report });
         setProcessing("IDLE");
         setSelectedFile(null);
-
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-        setIsUploaded(true);
       })
-      .catch((error) => {
-        console.error("Error uploading file:", error);
-        setProcessing("IDLE");
-      });
+      .catch(() => setProcessing("IDLE"));
   };
 
   const handleReset = async () => {
     try {
       setProcessing("RESET");
-      const uuid = imageUrl.split("/").pop().split(".")[0];
+      if (data.imageUrl === "generic.png") throw new Error("No Image Selected");
+      const uuid = data.imageUrl.split("/").pop().split(".")[0];
       await axios.post(`http://localhost:8000/reset/${uuid}/`);
-      document.cookie = "imageUrl=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
-      document.cookie = "maskUrl=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
-      document.cookie = "report=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;";
     } catch (error) {
-      console.error("Error resetting files:", error);
+      console.error("fetching error: " + error);
     } finally {
       setTimeout(() => {
-        setImageUrl("generic.png");
-        setMaskUrl("na.png");
+        updateData({ imageUrl: "generic.png", maskUrl: "na.png", report: "report.txt" });
         setSelectedFile(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-        setIsUploaded(false);
-        setReport("");
+        fileRef.current.value = "";
         setProcessing("IDLE");
       }, 400);
     }
@@ -83,52 +54,40 @@ export default function Uploader({ setReport }) {
 
   return (
     <>
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        className="flex flex-col items-center w-11/12 pt-8 pb-16 bg-gray-100"
-      >
-        <div className="flex space-x-16">
+      <div className="hidden">
+        <input type="file" accept="image" onChange={handleFile} ref={fileRef} />
+      </div>
+      <form onSubmit={(e) => e.preventDefault()} className="flex flex-col items-center py-8">
+        <div className="flex space-x-8 mb-4">
           <ImageDisplay
-            imageUrl={imageUrl}
-            title={!isUploaded ? "Upload An Image" : "Uploaded Image"}
+            imageUrl={data.imageUrl}
+            title={
+              !data.maskUrl || data.maskUrl === "na.png" ? "Upload An Image" : "Uploaded Image"
+            }
           />
-          <ImageDisplay imageUrl={maskUrl} title="Segmentation Mask" />
+          <ImageDisplay imageUrl={data.maskUrl} title="Segmentation Mask" />
         </div>
-
-        <div className="flex space-x-4 items-center">
+        <div className="flex space-x-2 mb-4 items-center">
           {selectedFile && (
-            <FormButton
-              onClick={handleUpload}
-              disabled={!selectedFile}
-              label="Upload"
-              bgColor="bg-green-500"
-            />
+            <FormButton onClick={handleUpload} bgColor="bg-green-500">
+              Upload
+            </FormButton>
           )}
-
-          <input
-            type="file"
-            accept="image/jpeg, image/png"
-            onChange={handleFileSelect}
-            ref={fileInputRef}
-            className="hidden"
-          />
-          {maskUrl === "na.png" && (
-            <FormButton
-              onClick={() => fileInputRef.current.click()}
-              label="Choose an Image"
-              bgColor="bg-blue-500"
-            />
+          {data.maskUrl === "na.png" && (
+            <FormButton onClick={() => fileRef.current.click()} bgColor="bg-blue-500">
+              Choose An Image
+            </FormButton>
           )}
-
-          <FormButton onClick={handleReset} disabled={false} label="Reset" bgColor="bg-red-500" />
+          <FormButton onClick={handleReset} bgColor="bg-red-500">
+            Reset
+          </FormButton>
         </div>
       </form>
-
-      {processing !== "IDLE" && (
+      {
         <div className="fixed">
           <Spinner mode={processing} />
         </div>
-      )}
+      }
     </>
   );
 }

@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Report({ report }) {
   const [reportContent, setReportContent] = useState("");
 
   useEffect(() => {
-    if (report) {
-      fetch(report)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`Failed to fetch report: ${response.statusText}`);
-          }
-          return response.text();
-        })
-        .then((data) => {
-          setReportContent(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching report:", error);
-        });
-    }
+    axios
+      .get(report)
+      .then((response) => {
+        setReportContent(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching report:", error);
+      });
   }, [report]);
 
   return (
@@ -26,23 +20,8 @@ export default function Report({ report }) {
       <h3 className="text-xl w-full text-center pb-4 mb-8 border-b-[1px] border-black">
         Automated Dental Diagnosis Report
       </h3>
-      {report !== "" ? (
-        <div className="text-justify text-sm" dangerouslySetInnerHTML={{ __html: reportContent }} />
-      ) : (
-        <div className="flex justify-center text-sm">
-          <p className="text-justify">
-            <strong>Instructions:</strong>
-            <br />
-            1. Choose an image
-            <br />
-            2. Upload the image
-            <br />
-            3. Wait until processed.
-            <br />
-            4. View the generated report.
-          </p>
-        </div>
-      )}
+
+      <div className="text-justify text-sm" dangerouslySetInnerHTML={{ __html: reportContent }} />
     </div>
   );
 }
