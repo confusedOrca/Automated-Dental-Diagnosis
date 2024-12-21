@@ -7,7 +7,6 @@ def summarize(bboxes):
     
     for bbox in bboxes:
         tooth_id = bbox["id"]
-        print(tooth_id)
         line = f"Tooth {tooth_id}:"
         total_pixels = bbox['tooth'] + bbox['stain'] + bbox['calculus'] + bbox['non carious lesion'] + bbox['cavity']
         

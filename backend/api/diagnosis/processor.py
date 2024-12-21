@@ -1,5 +1,4 @@
 import os
-import requests
 from django.conf import settings
 from .report_generation import generate_report
 from django.apps import apps

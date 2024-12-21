@@ -4,8 +4,8 @@ from rest_framework import status
 from django.conf import settings
 import os
 
-from .utils.save_upload import save_uploaded_image
-from .utils.processor import process
+from .diagnosis.save_upload import save_uploaded_image
+from .diagnosis.processor import process
 
 
 class UploadView(APIView):
@@ -13,8 +13,7 @@ class UploadView(APIView):
         file_path = save_uploaded_image(request.FILES['file'])
         image_url = request.build_absolute_uri(f"/media/images/{os.path.basename(file_path)}")
         mask_url, report_url = process(image_url)
-        if mask_url != "na.png":
-            mask_url = request.build_absolute_uri(f"/media/masks/{os.path.basename(mask_url)}")
+        mask_url = request.build_absolute_uri(f"/media/masks/{os.path.basename(mask_url)}")
         report_url = request.build_absolute_uri(f"/media/reports/{os.path.basename(report_url)}")
         
         return Response({
