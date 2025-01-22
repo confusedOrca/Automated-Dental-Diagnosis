@@ -22,6 +22,10 @@ The design of the application is as follows:
 
 ![Application Design](./assets/backend.png)
 
+The diagnosis report generator comprises two AI agents:
+- **Dentist** --> uses severity data to report diseases and suggest actionable steps. LLM used: Llama3.2:3B
+- **HTML Coder** --> formats Dentist's report to HTML to make it presentable on the web. LLM used: Qwen2.5-coder:3B
+
 ---
 
 ## Examples of Diagnoses
